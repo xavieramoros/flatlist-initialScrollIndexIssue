@@ -4,11 +4,6 @@ import { Constants } from 'expo';
 
 
 const { height, width } = Dimensions.get('window')
-// You can import from local files
-//import AssetExample from './components/AssetExample';
-
-// or any pure javascript modules available in npm
-//import { Card } from 'react-native-elements'; // 0.17.0
 
 export default class App extends Component {
   constructor(props){
