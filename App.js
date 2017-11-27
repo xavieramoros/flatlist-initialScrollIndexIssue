@@ -4,15 +4,13 @@ import { Constants } from 'expo';
 
 
 const { height, width } = Dimensions.get('window')
+const colors = ['red','blue','yellow','orange','brown','green','pink'] //7 colors
 
+const TITLE_HEIGHT = 20
 export default class App extends Component {
   constructor(props){
     super(props)
 
-    this.state = {
-      initialScrollIndex : 0,
-      show : false
-    }
 
     var data = []
     var images = [
@@ -26,7 +24,7 @@ export default class App extends Component {
         height: 400
       }]
     
-    var colors = ['red','blue','yellow','orange','brown','green','pink'] //7 colors
+    var rowHeights = []
 
     var image;
     for(let i=0; i<100;i++){
@@ -38,21 +36,50 @@ export default class App extends Component {
         height: image.height,
         color: colors[Math.floor(Math.random() * 8)]
       }
+
+      rowHeights.push(image.height + TITLE_HEIGHT)
     }
+
+    const cumulativeRowHeights = [
+      0,
+      ...rowHeights.reduce( (soFar, current) => {
+        const next = (soFar[soFar.length - 1] || 0) + current;
+        soFar.push(next);
+        return soFar;
+      }, [])
+    ].slice(0, rowHeights.length);
+
+    // console.log("cumulativeRowHeights:",cumulativeRowHeights);
+    // console.log("cumulativeRowHeights lenght:", cumulativeRowHeights.length);
+
+    this.state = {
+      initialScrollIndex : 0,
+      show : true,
+      rowHeights: rowHeights,
+      cumulativeRowHeights: cumulativeRowHeights
+    }
+
+
     this.data = data
   }
 
-  showFlatList = () => {
+  scrollToIndex = value => {
+    this.listRef.scrollToIndex({viewPosition: 0, index: value})
+  }
+
+  scrollToOffset = value => {
+    this.listRef.scrollToOffset({offset: this.state.cumulativeRowHeights[value]})  
+  }
+
+  setInitialScrollIndex = value => {
     this.setState({
-      show: true,
-      initialScrollIndex: 50
+      initialScrollIndex: value
     })
   }
 
-  hideFlatList = () => {
+  toggleFlatList = () => {
     this.setState({
-      show: false,
-      initialScrollIndex: 50
+      show: !this.state.show
     })
   }
 
@@ -60,7 +87,7 @@ export default class App extends Component {
   renderItem = ({ item }) => {
     return (
       <View style={{flex:1, backgroundColor:item.color, width: width, flexDirection: 'column',justifyContent: 'center', alignItems: 'center'}}>
-        <Text style={{fontSize: 20,fontWeight: 'bold'}}> Image {item.key} </Text>
+        <Text style={{height: TITLE_HEIGHT, fontSize: 20,fontWeight: 'bold'}}> Image {item.key} </Text>
         <Image
           style={{flex:1,width: item.width,height: item.height}}
           source={{uri: item.url}}
@@ -75,12 +102,24 @@ export default class App extends Component {
       return (
         <View style={styles.container}>
           <FlatList
+            ref={ ref => { this.listRef = ref; }}
             style={{width: width}}
             renderItem={this.renderItem}
             keyExtractor={ item => item.key}
-            initialScrollIndex = {this.state.initialScrollIndex}
+            // initialScrollIndex = {this.state.initialScrollIndex}
+
+            // Fixed Height getItemLayout            
+            // getItemLayout = {(data, index) => {
+            //   return {length: 400, offset: 400 * index, index}
+            // }}
+
+            // Variable Height getItemLayout
             getItemLayout = {(data, index) => {
-              return {length: 400, offset: 400 * index, index}
+              return {
+                length:this.state.rowHeights[index], 
+                offset:this.state.cumulativeRowHeights[index],
+                index
+              };  
             }}
             initialListSize={5} //listview optimization
             pageSize={10} //listview optimization
@@ -94,6 +133,7 @@ export default class App extends Component {
   renderButton(text, onPress){
     return (
       <TouchableOpacity
+        // style={ {height: 50 }}
         onPress = {onPress}>
         <Text style={styles.paragraph}>
           {text}
@@ -104,12 +144,17 @@ export default class App extends Component {
   }
   
   render() {
+
+    var toggleText = this.state.show? 'Hide' : 'Show'
+
     return (
       <View style={styles.container}>
-        {this.renderButton("Scroll to index 50", this.showFlatList)}
-        {this.renderButton("Hide flatList", this.hideFlatList)}
+        {this.renderButton("scrollToIndex", () => this.scrollToIndex(50))}
+        {this.renderButton("scrollToOffset", () => this.scrollToOffset(50))}
+        {this.renderButton(`${toggleText} flatList`, this.toggleFlatList)}
         {this.renderList()}
       </View>
+
     );
   }
 }
@@ -117,11 +162,11 @@ export default class App extends Component {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    marginTop: 50
+    marginTop: 20
   },
   paragraph: {
-    margin: 24,
-    fontSize: 18,
+    marginHorizontal: 24,
+    fontSize: 15,
     fontWeight: 'bold',
     textAlign: 'center',
     color: '#34495e',
