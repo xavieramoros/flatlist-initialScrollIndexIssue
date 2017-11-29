@@ -6,10 +6,14 @@
   "private": true,
   "main": "node_modules/expo/AppEntry.js",
   "dependencies": {
+    "@expo/vector-icons": "5.2.0",
+    "chance": "^1.0.12",
     "expo": "^22.0.0",
+    "invariant": "^2.2.2",
+    "lodash": "^4.17.4",
+    "prop-types": "^15.6.0",
     "react": "16.0.0-beta.5",
     "react-native": "https://github.com/expo/react-native/archive/sdk-22.0.0.tar.gz",
-    "@expo/vector-icons": "5.2.0",
     "react-native-elements": "0.17.0"
   }
 }
